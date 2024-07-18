@@ -129,13 +129,6 @@ def main():
             texto_descricao = f'PRESTAÇÃO DE SERVIÇO EDUCAÇÃO INFANTIL/FUNDAMENTAL MÊS {mes}/{ANO} - ALUNO {cliente.Aluno}'
             campo_descricao = bot.find_element('//*[@id="form:descriminacaoServico"]', By.XPATH)
             campo_descricao.send_keys(texto_descricao)
-
-            if cliente.Acumulador == '1':
-                opcao_turma = bot.find_element('//*[@id="form:codigoCnae"]', By.XPATH)
-                opcao_turma.click()
-                bot.type_up()
-                bot.enter()
-
             ################### VALOR ###################
             aba_valores = bot.find_element('//*[@id="topo_aba3"]/a', By.XPATH)
             aba_valores.click()
