@@ -17,6 +17,7 @@ dados['Acumulador'] = dados['Acumulador'].fillna('1')
 dados['Mensalidade'] = dados['Mensalidade'].apply(lambda x: '{:0.2f}'.format(x).replace('.',','))
 dados['ValorTotal'] = dados['ValorTotal'].apply(lambda x: '{:0.2f}'.format(x).replace('.',','))
 dados['Alimentação'] = dados['Alimentação'].apply(lambda x: '{:0.2f}'.format(x).replace('.',','))
+dados['Extra'] = dados['Extra'].apply(lambda x: '{:0.2f}'.format(x).replace('.',','))
 
 
 if __name__ == '__main__':
