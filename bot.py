@@ -8,6 +8,8 @@ from pyautogui import alert, confirm
 from dotenv import load_dotenv
 from pywinauto.application import Application
 from pywinauto.findwindows import find_window
+from webdriver_manager.chrome import ChromeDriverManager
+# from selenium.common.exceptions import ElementClickInterceptedException
 
 
 
@@ -61,8 +63,8 @@ def trazer_janela_para_frente(titulo):
 
 def main():
 
-    data_geracao = '30062024'
-    mes = 'JUNHO'
+    data_geracao = '31072024'
+    mes = 'JULHO'
     
     ANO = '2024'
     
@@ -72,7 +74,8 @@ def main():
     bot = WebBot()
     bot.headless = False
     bot.browser = Browser.CHROME
-    bot.driver_path = os.getenv('BOT_DRIVER_PATH')
+    # bot.driver_path = os.getenv('BOT_DRIVER_PATH')
+    bot.driver_path = ChromeDriverManager().install()
     profile_path = os.getenv('PROFILE_PATH')
 
     def_options = default_options(
@@ -142,21 +145,24 @@ def main():
             
             botao_confirmar_geracao = bot.find_element('//*[@id="appletAssinador:j_id766"]', By.XPATH)
             botao_confirmar_geracao.click()
-            
             bot.wait(1000)
 
-            nome_janela = 'Logon do Token' # TROCAR
+            nome_janela = 'Introduzir PIN'
             janela = trazer_janela_para_frente(nome_janela)
             while janela == None:
                 janela = trazer_janela_para_frente(nome_janela)
 
             bot_desktop.kb_type('1234')
             bot_desktop.enter()
-            bot.wait(3000)
+            bot.wait(1500)
             
-            botao_download = bot.find_element('//*[@id="form"]/input[2]', By.XPATH, ensure_clickable=True, ensure_visible=True)
-            # bot.wait_for_element_visibility(botao_download)
+            botao_download = bot.find_element('//*[@id="form"]/input[2]', 
+                                              By.XPATH,
+                                              ensure_clickable=True,
+                                              ensure_visible=True,
+                                              waiting_time=50000)
             botao_download.click()
+            
             bot.wait(1000)
             num_nota = bot.get_last_created_file(download_folder_path).split(os.sep)[-1].split('.')[0][-4:]
 
@@ -169,9 +175,12 @@ def main():
                 raise
         ################### RETORNA E LIMPA OS CAMPOS ###################
         try:    
-            botao_retorno = bot.find_element('//*[@id="form:j_id9"]', By.XPATH)
+            botao_retorno = bot.find_element('//*[@id="form:j_id9"]',
+                                             By.XPATH,
+                                             ensure_clickable=True,
+                                             ensure_visible=True)
             botao_retorno.click()
-            bot.wait(3000)
+            bot.wait(2000)
             
             botao_limpar_digitacao = bot.find_element('//*[@id="form"]/input[3]', By.XPATH)
             botao_limpar_digitacao.click()
