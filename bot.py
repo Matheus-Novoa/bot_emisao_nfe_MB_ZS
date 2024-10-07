@@ -9,7 +9,10 @@ from dotenv import load_dotenv
 from pywinauto.application import Application
 from pywinauto.findwindows import find_window
 from webdriver_manager.chrome import ChromeDriverManager
-# from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By as sBy
+from selenium.common.exceptions import StaleElementReferenceException, ElementClickInterceptedException
 
 
 
@@ -63,8 +66,8 @@ def trazer_janela_para_frente(titulo):
 
 def main():
 
-    data_geracao = '31072024'
-    mes = 'JULHO'
+    data_geracao = '30092024'
+    mes = 'SETEMBRO'
     
     ANO = '2024'
     
@@ -74,7 +77,6 @@ def main():
     bot = WebBot()
     bot.headless = False
     bot.browser = Browser.CHROME
-    # bot.driver_path = os.getenv('BOT_DRIVER_PATH')
     bot.driver_path = ChromeDriverManager().install()
     profile_path = os.getenv('PROFILE_PATH')
 
@@ -91,11 +93,13 @@ def main():
     
     entrar(bot)
 
-    aba_geracao = bot.find_element('//*[@id="nav"]/div[1]/a/img', By.XPATH)
-    aba_geracao.click()
+    # aba_geracao
+    bot.find_element('//*[@id="nav"]/div[1]/a/img', By.XPATH).click()
     bot.wait(1000)
-    campo_geracao = bot.find_element('//*[@id="MesReferenciaModalPanelSubview:formMesReferencia:dtCompetencia"]', By.XPATH)
-    campo_geracao.send_keys(data_geracao)
+    
+    # campo_geracao
+    bot.find_element('//*[@id="MesReferenciaModalPanelSubview:formMesReferencia:dtCompetencia"]',
+                                     By.XPATH).send_keys(data_geracao)
     bot.enter()
     bot.wait(3000)
     
@@ -103,11 +107,12 @@ def main():
         
         try:
             ################### CPF ###################
-            campo_cpf = bot.find_element('//*[@id="form:numDocumento"]', By.XPATH)
+            wait = WebDriverWait(bot.driver, 15)
+            campo_cpf = wait.until(EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form:numDocumento"]')))
             campo_cpf.click()
             campo_cpf.send_keys(cliente.CPF)
-            botao_lupa = bot.find_element('//*[@id="form:btAutoCompleteTomador"]', By.XPATH)
-            botao_lupa.click()
+            # botao_lupa
+            bot.find_element('//*[@id="form:btAutoCompleteTomador"]', By.XPATH).click()
             
             if bot.find("erro_cpf_nao_encontrado", matching=0.97, waiting_time=1500):
                 not_found("erro_cpf_nao_encontrado")
@@ -154,15 +159,17 @@ def main():
 
             bot_desktop.kb_type('1234')
             bot_desktop.enter()
-            bot.wait(1500)
             
-            botao_download = bot.find_element('//*[@id="form"]/input[2]', 
-                                              By.XPATH,
-                                              ensure_clickable=True,
-                                              ensure_visible=True,
-                                              waiting_time=50000)
-            botao_download.click()
-            
+            while True:
+                try:
+                    botao_download = wait.until(EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form"]/input[2]')))
+                    bot.wait(500)
+                    botao_download.click()
+                    break
+                except:
+                    print('\nNova tentativa')
+                    bot.wait(1000)
+
             bot.wait(1000)
             num_nota = bot.get_last_created_file(download_folder_path).split(os.sep)[-1].split('.')[0][-4:]
 
@@ -180,11 +187,11 @@ def main():
                                              ensure_clickable=True,
                                              ensure_visible=True)
             botao_retorno.click()
-            bot.wait(2000)
+            bot.wait(1000)
             
-            botao_limpar_digitacao = bot.find_element('//*[@id="form"]/input[3]', By.XPATH)
+            botao_limpar_digitacao = wait.until(EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form"]/input[3]')))
             botao_limpar_digitacao.click()
-            bot.wait(2000)
+            bot.wait(1000)
         except:
             with open(arquivo_progresso, 'w') as f:
                 f.write(f'Erro após {cliente.ResponsávelFinanceiro} linha {int(cliente.Index) + 1}')
