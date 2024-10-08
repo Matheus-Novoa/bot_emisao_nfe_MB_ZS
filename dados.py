@@ -4,7 +4,7 @@ from tkinter import filedialog
 
 
 # arquivo_planilha = filedialog.askopenfilename()
-arquivo_planilha = Path(r"C:\Users\novoa\OneDrive\Área de Trabalho\notas_MB\planilhas\zona_sul\escola_canadenseZS_ago24\Numeração de Boletos_Zona Sul_2024_ago.xlsx")
+arquivo_planilha = Path(r"C:\Users\novoa\OneDrive\Área de Trabalho\notas_MB\planilhas\zona_sul\escola_canadenseZS_set24\Numeração de Boletos_Zona Sul_2024_SET.xlsx")
 arquivo_progresso = arquivo_planilha.parent / 'progresso.log'
 arquivo_notas = arquivo_planilha.parent / 'num_notas.txt'
 dados = pd.read_excel(arquivo_planilha, 'dados', header=0)

@@ -114,18 +114,31 @@ def main():
             # botao_lupa
             bot.find_element('//*[@id="form:btAutoCompleteTomador"]', By.XPATH).click()
             
-            if bot.find("erro_cpf_nao_encontrado", matching=0.97, waiting_time=1500):
-                not_found("erro_cpf_nao_encontrado")
-                alert(title='CPF não cadastrado. Preencha manualmente')
+            # if bot.find("erro_cpf_nao_encontrado", matching=0.97, waiting_time=1500):
+            #     not_found("erro_cpf_nao_encontrado")
+            #     alert(title='CPF não cadastrado. Preencha manualmente')
 
             nome_responsavel_dados = unidecode(cliente.ResponsávelFinanceiro.upper().strip())
-            campo_razao_social = bot.find_element('//*[@id="form:dnomeRazaoSocial"]', By.XPATH)
-            bot.wait_for_element_visibility(campo_razao_social)
-            nome_responsavel_retornado = unidecode(campo_razao_social.get_attribute('value').upper().strip())
+            campo_razao_social = bot.find_element('//*[@id="form:dnomeRazaoSocial"]',
+                                                    By.XPATH)
+            
+            nome_responsavel_retornado = None
+            while not (nome_responsavel_retornado and campo_razao_social):
+                campo_razao_social = bot.find_element('//*[@id="form:dnomeRazaoSocial"]',
+                                                    By.XPATH)
+                try:
+                    nome_responsavel_retornado = unidecode(
+                        campo_razao_social.get_attribute('value').upper().strip())
+                except StaleElementReferenceException as err:
+                    print(err)
+                    continue
 
             while nome_responsavel_retornado != nome_responsavel_dados:
-                resposta = confirm(text=f'{nome_responsavel_retornado} | {nome_responsavel_dados}',
-                        title='Nome do responsável não correspondente', buttons=['Continuar', 'Interromper'])
+                resposta = confirm(
+                        text=f'{nome_responsavel_retornado} | {nome_responsavel_dados}',
+                        title='Nome do responsável não correspondente',
+                        buttons=['Continuar', 'Interromper']
+                        )
                 if resposta == 'Continuar':
                     break
                 else:
@@ -135,22 +148,23 @@ def main():
             bot.wait_for_element_visibility(aba_identificacao_servico)
             aba_identificacao_servico.click()
             texto_descricao = f'PRESTAÇÃO DE SERVIÇO EDUCAÇÃO INFANTIL/FUNDAMENTAL MÊS {mes}/{ANO} - ALUNO {cliente.Aluno}'
-            campo_descricao = bot.find_element('//*[@id="form:descriminacaoServico"]', By.XPATH)
-            campo_descricao.send_keys(texto_descricao)
+            
+            # campo_descricao
+            bot.find_element('//*[@id="form:descriminacaoServico"]', By.XPATH).send_keys(texto_descricao)
+            
             ################### VALOR ###################
-            aba_valores = bot.find_element('//*[@id="topo_aba3"]/a', By.XPATH)
-            aba_valores.click()
-            campo_valor_total = bot.find_element('//*[@id="form:valorServicos"]', By.XPATH)
-            campo_valor_total.send_keys(cliente.ValorTotal)
+            # aba_valores
+            bot.find_element('//*[@id="topo_aba3"]/a', By.XPATH).click()
+            # campo_valor_total
+            bot.find_element('//*[@id="form:valorServicos"]', By.XPATH).send_keys(cliente.ValorTotal)
 
             ################### DOWNLOAD NOTA ###################
-            botao_gerar_nfs = bot.find_element('//*[@id="form:bt_emitir_NFS-e"]', By.XPATH)
-            botao_gerar_nfs.click()
-            bot.wait(2000)
-            
-            botao_confirmar_geracao = bot.find_element('//*[@id="appletAssinador:j_id766"]', By.XPATH)
-            botao_confirmar_geracao.click()
-            bot.wait(1000)
+            # botao_gerar_nfs
+            bot.find_element('//*[@id="form:bt_emitir_NFS-e"]', By.XPATH).click()
+            # botao_confirmar_geracao
+            bot.find_element('//*[@id="appletAssinador:j_id766"]',
+                                By.XPATH,
+                                ensure_clickable=True).click()
 
             nome_janela = 'Introduzir PIN'
             janela = trazer_janela_para_frente(nome_janela)
@@ -162,13 +176,13 @@ def main():
             
             while True:
                 try:
-                    botao_download = wait.until(EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form"]/input[2]')))
                     bot.wait(500)
+                    botao_download = wait.until(EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form"]/input[2]')))
                     botao_download.click()
                     break
-                except:
+                except Exception as err:
+                    print(err)
                     print('\nNova tentativa')
-                    bot.wait(1000)
 
             bot.wait(1000)
             num_nota = bot.get_last_created_file(download_folder_path).split(os.sep)[-1].split('.')[0][-4:]
@@ -181,21 +195,30 @@ def main():
                 f.write(f'Erro {cliente.ResponsávelFinanceiro} linha {cliente.Index}')
                 raise
         ################### RETORNA E LIMPA OS CAMPOS ###################
-        try:    
-            botao_retorno = bot.find_element('//*[@id="form:j_id9"]',
-                                             By.XPATH,
-                                             ensure_clickable=True,
-                                             ensure_visible=True)
-            botao_retorno.click()
-            bot.wait(1000)
-            
-            botao_limpar_digitacao = wait.until(EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form"]/input[3]')))
-            botao_limpar_digitacao.click()
-            bot.wait(1000)
-        except:
-            with open(arquivo_progresso, 'w') as f:
-                f.write(f'Erro após {cliente.ResponsávelFinanceiro} linha {int(cliente.Index) + 1}')
-                raise
+        while True:
+            try:    
+                # botao_retorno
+                bot.find_element('//*[@id="form:j_id9"]',
+                                                By.XPATH,
+                                                ensure_clickable=True,
+                                                ensure_visible=True).click()
+                
+                # botao_limpar_digitacao
+                botao_limpar_digitacao = wait.until(
+                    EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form"]/input[3]'))
+                    )
+                bot.wait(500)
+                botao_limpar_digitacao.click()
+                break
+            except ElementClickInterceptedException as err:
+                print(err)
+                print('\nNova Tentativa')
+                bot.wait(500)
+                continue
+            except Exception as err:
+                with open(arquivo_progresso, 'w') as f:
+                    f.write(f'Erro após {cliente.ResponsávelFinanceiro} linha {int(cliente.Index) + 1}')
+                    raise err
     sair(bot)
     bot.stop_browser()
 
