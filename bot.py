@@ -60,7 +60,7 @@ def trazer_janela_para_frente(titulo):
         janela.set_focus()
         return janela
     except Exception as e:
-        print(f"Erro ao trazer a janela para frente: {e}")
+        # print(f"Erro ao trazer a janela para frente: {e}")
         return None
 
 
@@ -107,12 +107,17 @@ def main():
         
         try:
             ################### CPF ###################
-            wait = WebDriverWait(bot.driver, 15)
-            campo_cpf = wait.until(EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form:numDocumento"]')))
-            campo_cpf.click()
-            campo_cpf.send_keys(cliente.CPF)
-            # botao_lupa
-            bot.find_element('//*[@id="form:btAutoCompleteTomador"]', By.XPATH).click()
+            while True:
+                try:
+                    wait = WebDriverWait(bot.driver, 15)
+                    campo_cpf = wait.until(EC.element_to_be_clickable((sBy.XPATH, '//*[@id="form:numDocumento"]')))
+                    campo_cpf.click()
+                    campo_cpf.send_keys(cliente.CPF)
+                    # botao_lupa
+                    bot.find_element('//*[@id="form:btAutoCompleteTomador"]', By.XPATH).click()
+                    break
+                except ElementClickInterceptedException:
+                    continue
             
             # if bot.find("erro_cpf_nao_encontrado", matching=0.97, waiting_time=1500):
             #     not_found("erro_cpf_nao_encontrado")
@@ -130,7 +135,7 @@ def main():
                     nome_responsavel_retornado = unidecode(
                         campo_razao_social.get_attribute('value').upper().strip())
                 except StaleElementReferenceException as err:
-                    print(err)
+                    print('Não foi possível realizar a leitura do nome')
                     continue
 
             while nome_responsavel_retornado != nome_responsavel_dados:
@@ -167,9 +172,11 @@ def main():
                                 ensure_clickable=True).click()
 
             nome_janela = 'Introduzir PIN'
+            bot.wait(500)
             janela = trazer_janela_para_frente(nome_janela)
             while janela == None:
                 janela = trazer_janela_para_frente(nome_janela)
+                bot.wait(500)
 
             bot_desktop.kb_type('1234')
             bot_desktop.enter()
@@ -181,8 +188,8 @@ def main():
                     botao_download.click()
                     break
                 except Exception as err:
-                    print(err)
-                    print('\nNova tentativa')
+                    print('Esperando o carregamento da página de downloads...')
+                    continue
 
             bot.wait(1000)
             num_nota = bot.get_last_created_file(download_folder_path).split(os.sep)[-1].split('.')[0][-4:]
@@ -211,8 +218,7 @@ def main():
                 botao_limpar_digitacao.click()
                 break
             except ElementClickInterceptedException as err:
-                print(err)
-                print('\nNova Tentativa')
+                print('Erro na limpeza dos campos')
                 bot.wait(500)
                 continue
             except Exception as err:
